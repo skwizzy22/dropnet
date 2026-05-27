@@ -1,0 +1,17 @@
+{
+  "name": "dropnetgaming-hidden-control-render",
+  "version": "1.0.0",
+  "description": "DNG CS2 site with hidden server-side control panel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.3",
+    "pg": "^8.11.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
