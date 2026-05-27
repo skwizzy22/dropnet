@@ -1,0 +1,3613 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DNG CS2 Match Hub</title>
+  <style>
+    :root {
+      --bg: #030303;
+      --panel: rgba(8, 9, 13, 0.86);
+      --line: rgba(255, 255, 255, 0.12);
+      --line-strong: rgba(255, 255, 255, 0.28);
+      --text: #ffffff;
+      --muted: #a6a6ad;
+      --soft: rgba(255, 255, 255, 0.06);
+      --soft-2: rgba(255, 255, 255, 0.11);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      color: var(--text);
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      overflow: hidden;
+    }
+
+    button, input, textarea, select { font-family: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 35% 10%, rgba(255,255,255,.10), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(90,100,145,.12), transparent 32%),
+        linear-gradient(135deg, #030303 0%, #111218 52%, #020207 100%);
+      position: relative;
+    }
+
+    .app-shell::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      opacity: .36;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 46px 46px;
+      mask-image: radial-gradient(circle at center, black 0%, transparent 86%);
+    }
+
+    .topbar {
+      height: 64px;
+      display: grid;
+      grid-template-columns: 270px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 0 16px;
+      background: rgba(0,0,0,.82);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+      position: relative;
+      z-index: 20;
+    }
+
+    .brand {
+      height: 58px;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0;
+    }
+
+    .brand-logo {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: #030303;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      font-weight: 1000;
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .brand-text {
+      text-align: left;
+      line-height: .9;
+    }
+
+    .brand-text b {
+      display: block;
+      font-size: 30px;
+      font-weight: 1000;
+      letter-spacing: -.06em;
+    }
+
+    .brand-text span {
+      display: block;
+      margin-top: 5px;
+      color: #d9d9df;
+      font-size: 12px;
+      letter-spacing: .42em;
+      font-weight: 1000;
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .top-nav::-webkit-scrollbar { display: none; }
+
+    .top-link, .small-action, .notif {
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      color: #fff;
+      border-radius: 999px;
+      min-height: 40px;
+      padding: 0 17px;
+      font-size: 14px;
+      font-weight: 1000;
+      white-space: nowrap;
+      transition: .18s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .top-link:hover, .small-action:hover, .notif:hover {
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.34);
+      transform: translateY(-1px);
+    }
+
+    .top-link.active {
+      border-color: rgba(255,255,255,.70);
+      background: rgba(255,255,255,.13);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      min-width: max-content;
+    }
+
+    .small-action.admin { background: rgba(255,255,255,.14); }
+    .small-action.danger {
+      color: #ffb4b4;
+      border-color: rgba(255,100,100,.36);
+    }
+
+    .layout {
+      height: calc(100vh - 64px);
+      display: grid;
+      grid-template-columns: 270px 1fr 64px;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: rgba(0,0,0,.76);
+      backdrop-filter: blur(16px);
+      overflow-y: auto;
+      padding: 22px 14px;
+    }
+
+    .sidebar::-webkit-scrollbar, .page-content::-webkit-scrollbar { width: 10px; }
+    .sidebar::-webkit-scrollbar-thumb, .page-content::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,.45);
+      border-radius: 999px;
+    }
+
+    .large-logo {
+      width: 100%;
+      min-height: 205px;
+      border: 0;
+      background: transparent;
+      display: grid;
+      place-items: center;
+      margin-bottom: 24px;
+      padding: 0;
+    }
+
+    .large-logo img {
+      width: 220px;
+      max-width: 100%;
+      border-radius: 28px;
+      display: block;
+    }
+
+    .side-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .side-link {
+      min-height: 54px;
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.09);
+      background: rgba(255,255,255,.035);
+      color: #d8d8df;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 0 16px;
+      font-size: 16px;
+      font-weight: 1000;
+      text-align: left;
+      transition: .18s ease;
+    }
+
+    .side-link:hover {
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.25);
+      color: #fff;
+      transform: translateX(3px);
+    }
+
+    .side-link.active {
+      border-color: rgba(255,255,255,.58);
+      background: rgba(255,255,255,.10);
+      color: #fff;
+    }
+
+    .side-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.13);
+      background: rgba(255,255,255,.055);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      font-size: 18px;
+    }
+
+    .side-divider {
+      height: 1px;
+      background: rgba(255,255,255,.10);
+      margin: 14px 0;
+    }
+
+    .page-content {
+      overflow-y: auto;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% 10%, rgba(255,255,255,.10), transparent 30%),
+        linear-gradient(90deg, rgba(0,0,0,.68), rgba(10,12,20,.75), rgba(0,0,0,.70));
+    }
+
+    .rightbar {
+      border-left: 1px solid var(--line);
+      background: rgba(0,0,0,.80);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      padding: 18px 8px;
+    }
+
+    .rightbar button {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      transition: .18s ease;
+    }
+
+    .rightbar button:hover {
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.40);
+      transform: translateY(-2px);
+    }
+
+    .page {
+      width: min(1360px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 44px 0 80px;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 30% 0%, rgba(255,255,255,.10), transparent 30%),
+        linear-gradient(135deg, rgba(0,0,0,.62), rgba(13,16,29,.74));
+      border-radius: 28px;
+      padding: 42px;
+      box-shadow: 0 0 55px rgba(255,255,255,.08);
+    }
+
+    .kicker {
+      color: #aaaab3;
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: .45em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 12px 0;
+      font-size: clamp(42px, 5.2vw, 74px);
+      line-height: .95;
+      font-weight: 1000;
+      letter-spacing: -.055em;
+    }
+
+    .hero p, .muted {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      min-height: 52px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(135deg, #fff, #9a9a9a);
+      color: #080808;
+      padding: 0 22px;
+      font-weight: 1000;
+      font-size: 16px;
+      transition: .18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 26px rgba(255,255,255,.18);
+    }
+
+    .btn.dark {
+      color: #fff;
+      background: rgba(255,255,255,.07);
+    }
+
+    .grid {
+      display: grid;
+      gap: 22px;
+      margin-top: 26px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(0,0,0,.58), rgba(17,20,34,.70));
+      border-radius: 26px;
+      padding: 26px;
+      box-shadow: 0 0 30px rgba(0,0,0,.28);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 26px;
+      letter-spacing: -.04em;
+    }
+
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1.2fr .9fr;
+      gap: 22px;
+      margin-top: 26px;
+    }
+
+    .profile-strip {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 28px;
+      align-items: center;
+      margin-top: 24px;
+    }
+
+    .level-circle {
+      width: 128px;
+      height: 128px;
+      border-radius: 999px;
+      border: 16px solid rgba(255,255,255,.07);
+      background: #040404;
+      display: grid;
+      place-items: center;
+      font-size: 52px;
+      font-weight: 1000;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.10);
+    }
+
+    .progress {
+      height: 8px;
+      background: rgba(255,255,255,.13);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .progress span {
+      height: 100%;
+      display: block;
+      background: linear-gradient(90deg, #fff, #9f9f9f);
+      border-radius: 999px;
+    }
+
+    .party-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 26px;
+    }
+
+    .party-card {
+      min-height: 210px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.48);
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #b9b9c1;
+    }
+
+    .plus {
+      display: block;
+      font-size: 56px;
+      line-height: 1;
+      color: #bdbdc6;
+    }
+
+    .avatar {
+      width: 86px;
+      height: 86px;
+      border-radius: 999px;
+      background: #030303;
+      border: 1px solid rgba(255,255,255,.22);
+      display: grid;
+      place-items: center;
+      font-weight: 1000;
+      color: #fff;
+      margin: 0 auto 16px;
+    }
+
+    .queue-panel {
+      margin-top: 26px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      background: rgba(4,5,11,.78);
+    }
+
+    .queue-top {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 26px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .queue-modes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      padding: 26px;
+    }
+
+    .mode-card {
+      text-align: left;
+      min-height: 110px;
+      border: 1px solid rgba(255,255,255,.11);
+      background: rgba(0,0,0,.40);
+      color: #fff;
+      border-radius: 18px;
+      padding: 18px;
+      transition: .18s ease;
+    }
+
+    .mode-card:hover {
+      border-color: rgba(255,255,255,.35);
+      transform: translateY(-2px);
+      background: rgba(255,255,255,.06);
+    }
+
+    .mode-card strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 18px;
+    }
+
+    .table th, .table td {
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      padding: 16px;
+      text-align: left;
+    }
+
+    .table th {
+      color: #d8d8de;
+      background: rgba(255,255,255,.06);
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .input, .textarea, .select {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.13);
+      background: rgba(0,0,0,.45);
+      color: #fff;
+      border-radius: 16px;
+      padding: 15px 16px;
+      outline: none;
+    }
+
+    .textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .match-room-grid {
+      display: grid;
+      grid-template-columns: 1.2fr .85fr 1.2fr;
+      gap: 22px;
+      margin-top: 26px;
+    }
+
+    .player-row {
+      min-height: 70px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.035);
+      border-radius: 16px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .avatar-sm {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: #050505;
+      border: 1px solid rgba(255,255,255,.20);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 1000;
+    }
+
+    .ready {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .score-box {
+      margin-top: 28px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.055);
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      font-weight: 1000;
+    }
+
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .action-card {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(0,0,0,.58), rgba(17,20,34,.70));
+      border-radius: 24px;
+      padding: 22px;
+      min-height: 170px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .action-card h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -.04em;
+    }
+
+    .action-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .mini-stat {
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.045);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .mini-stat b {
+      display: block;
+      font-size: 26px;
+      margin-bottom: 4px;
+    }
+
+    .mini-stat span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tag {
+      display: inline-flex;
+      min-height: 30px;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.055);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .status-box {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.055);
+      color: #fff;
+      line-height: 1.55;
+    }
+
+    .auto-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .auto-row {
+      min-height: 62px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.035);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .auto-row strong {
+      display: block;
+    }
+
+    .auto-row span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .progress.big {
+      height: 12px;
+    }
+
+
+    @media (max-width: 1100px) {
+      body { overflow: auto; }
+
+      .app-shell {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+        height: auto;
+        padding: 10px;
+      }
+
+      .layout {
+        height: auto;
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar, .rightbar { display: none; }
+      .page-content { overflow: visible; }
+
+      .page {
+        width: min(100% - 24px, 1100px);
+        padding: 24px 0 60px;
+      }
+
+      .home-grid,
+      .grid-2,
+      .grid-3,
+      .action-grid,
+      .match-room-grid,
+      .queue-top,
+      .queue-modes {
+        grid-template-columns: 1fr;
+      }
+
+      .party-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand" onclick="go('matchmaking')">
+        <span class="brand-logo">
+          <img src="public/logo-dng-final.png" alt="DNG" onerror="this.style.display='none'; this.parentElement.textContent='DNG';" />
+        </span>
+
+        <span class="brand-text">
+          <b>DNG</b>
+          <span>CS2</span>
+        </span>
+      </button>
+
+      <nav class="top-nav" id="topNav"></nav>
+      <div class="top-actions" id="topActions"></div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <button class="large-logo" onclick="go('matchmaking')">
+          <img src="public/logo-dng-final.png" alt="DNG Logo" onerror="this.style.display='none';" />
+        </button>
+
+        <nav class="side-list" id="sideNav"></nav>
+      </aside>
+
+      <main class="page-content" id="app"></main>
+      <aside class="rightbar" id="rightbar"></aside>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_USERS = "dng_users_ready_html_v1";
+    const STORAGE_SESSION = "dng_session_ready_html_v1";
+    const STORAGE_TICKETS = "dng_tickets_ready_html_v1";
+    const STORAGE_NEWS = "dng_news_ready_html_v1";
+    const STORAGE_MATCHES = "dng_matches_ready_html_v1";
+    const STORAGE_QUESTS = "dng_quests_ready_html_v1";
+
+    const topNav = [
+      ["matchmaking", "Матчмейкинг"],
+      ["play", "Играть"],
+      ["match-room", "Комната матча"],
+      ["tournaments", "Турниры"],
+      ["premium", "Premium"],
+      ["teams", "Команды"],
+      ["leaderboard", "Лидерборд"],
+      ["news", "Новости"],
+      ["chat", "Чат"],
+      ["faq", "FAQ"]
+    ];
+
+    const mainNav = [
+      ["search", "Поиск", "⌕"],
+      ["friends", "Party Finder", "☷"],
+      ["play", "Играть", "▶"],
+      ["match-room", "Комната матча", "×"],
+      ["premium", "Premium", "♔"],
+      ["teams", "Команды", "☷"],
+      ["leaderboard", "Лидерборд", "↗"],
+      ["news", "Новости", "▣"],
+      ["chat", "Чат", "✦"],
+      ["quests", "Задания", "☼"],
+      ["feedback", "Обратная связь", "▱"]
+    ];
+
+    const serviceNav = [
+      ["tournaments", "Турниры", "♕"],
+      ["rules", "Правила", "◈"],
+      ["contacts", "Контакты", "▱"],
+      ["privacy", "Политика", "◈"]
+    ];
+
+    const routes = [
+      "matchmaking", "play", "match-room", "tournaments", "premium", "teams",
+      "leaderboard", "news", "chat", "quests", "feedback", "profile", "login",
+      "register", "rules", "faq", "contacts", "privacy", "testing",
+      "search", "friends", "inventory", "maps", "servers", "anticheat",
+      "settings", "stats", "league"
+    ];
+
+    const defaultNews = [
+      {
+        id: 1,
+        tag: "CS2",
+        title: "Обновление матчмейкинга DNG",
+        text: "Добавлена мини-игра перед поиском матча, ELO и история игр."
+      },
+      {
+        id: 2,
+        tag: "DNG",
+        title: "Новости через админ-панель",
+        text: "Администратор может добавлять новости прямо на сайте."
+      },
+      {
+        id: 3,
+        tag: "Gaming",
+        title: "Steel Wings Arena",
+        text: "Новая визуальная тема проекта с тёмным интерфейсом и DNG-логотипом."
+      }
+    ];
+
+    const defaultQuests = [
+      { id: 1, title: "Сыграть 1 матч", type: "matches", goal: 1, progress: 0, reward: 40 },
+      { id: 2, title: "Выиграть 1 матч", type: "wins", goal: 1, progress: 0, reward: 60 },
+      { id: 3, title: "Получить ELO", type: "elo", goal: 20, progress: 0, reward: 80 }
+    ];
+
+    let state = {
+      route: getRoute(),
+      users: loadUsers(),
+      currentUser: readJson(STORAGE_SESSION, null),
+      tickets: readJson(STORAGE_TICKETS, []),
+      news: readJson(STORAGE_NEWS, defaultNews),
+      matches: readJson(STORAGE_MATCHES, []),
+      quests: readJson(STORAGE_QUESTS, defaultQuests),
+      payments: [],
+      chatMessages: [],
+      notifications: []
+    };
+
+
+    const API_MODE = location.protocol !== "file:";
+    let serverStateReady = !API_MODE;
+    let apiSaveTimer = null;
+
+    async function loadServerState() {
+      if (!API_MODE) return;
+
+      try {
+        const response = await fetch("/api/state", {
+          method: "GET",
+          headers: { "Accept": "application/json" }
+        });
+
+        if (!response.ok) {
+          throw new Error("API state load failed");
+        }
+
+        const data = await response.json();
+
+        state.users = Array.isArray(data.users) ? data.users : state.users;
+        state.tickets = Array.isArray(data.tickets) ? data.tickets : state.tickets;
+        state.news = Array.isArray(data.news) ? data.news : state.news;
+        state.matches = Array.isArray(data.matches) ? data.matches : state.matches;
+        state.quests = Array.isArray(data.quests) ? data.quests : state.quests;
+        state.payments = Array.isArray(data.payments) ? data.payments : state.payments;
+        state.chatMessages = Array.isArray(data.chatMessages) ? data.chatMessages : state.chatMessages;
+
+        if (state.currentUser) {
+          if (state.currentUser.role === "admin") {
+            state.currentUser = null;
+            localStorage.removeItem(STORAGE_SESSION);
+          } else {
+            const freshUser = state.users.find(user => user.username === state.currentUser.username);
+            if (freshUser) {
+              state.currentUser = normalizeUser(freshUser);
+              writeJson(STORAGE_SESSION, state.currentUser);
+            }
+          }
+        }
+
+        serverStateReady = true;
+        render();
+      } catch (error) {
+        console.warn("Render database is not connected yet:", error);
+        serverStateReady = true;
+      }
+    }
+
+    function queueServerSave() {
+      if (!API_MODE || !serverStateReady) return;
+
+      window.clearTimeout(apiSaveTimer);
+
+      apiSaveTimer = window.setTimeout(async () => {
+        try {
+          await fetch("/api/state", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              users: state.users,
+              tickets: state.tickets,
+              news: state.news,
+              matches: state.matches,
+              quests: state.quests
+            })
+          });
+        } catch (error) {
+          console.warn("Render database save failed:", error);
+        }
+      }, 350);
+    }
+
+
+    function readJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function writeJson(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function loadUsers() {
+      const users = readJson(STORAGE_USERS, []);
+      return Array.isArray(users) ? users.filter(user => user && user.role !== "admin") : [];
+    }
+
+    function saveAll() {
+      writeJson(STORAGE_USERS, state.users);
+      writeJson(STORAGE_TICKETS, state.tickets);
+      writeJson(STORAGE_NEWS, state.news);
+      writeJson(STORAGE_MATCHES, state.matches);
+      writeJson(STORAGE_QUESTS, state.quests);
+
+      if (state.currentUser) {
+        writeJson(STORAGE_SESSION, state.currentUser);
+      } else {
+        localStorage.removeItem(STORAGE_SESSION);
+      }
+
+      queueServerSave();
+    }
+
+    function getRoute() {
+      const hash = location.hash.replace("#/", "").replace("#", "").split("?")[0].trim();
+      if (!hash) return "matchmaking";
+      return routes.includes(hash) ? hash : "not-found";
+    }
+
+    function go(route) {
+      location.hash = "#/" + route;
+    }
+
+    function notify(text) {
+      state.notifications.unshift({ id: Date.now(), text });
+      state.notifications = state.notifications.slice(0, 9);
+      renderLayout();
+    }
+
+    function normalizeUser(user) {
+      const xp = Number(user.xp || 0);
+
+      return {
+        username: user.username,
+        password: user.password,
+        nickname: user.nickname || user.username,
+        role: user.role || "user",
+        elo: Number(user.elo || 1000),
+        level: Math.max(1, Math.floor(xp / 150) + 1),
+        wins: Number(user.wins || 0),
+        losses: Number(user.losses || 0),
+        matches: Number(user.matches || 0),
+        xp
+      };
+    }
+
+    function logout() {
+      state.currentUser = null;
+      saveAll();
+      go("matchmaking");
+      render();
+    }
+
+    function updateQuest(type, amount) {
+      let reward = 0;
+
+      state.quests = state.quests.map(quest => {
+        if (quest.type !== type || quest.progress >= quest.goal) {
+          return quest;
+        }
+
+        const progress = Math.min(quest.goal, quest.progress + amount);
+
+        if (progress >= quest.goal) {
+          reward += quest.reward;
+        }
+
+        return { ...quest, progress };
+      });
+
+      if (reward > 0 && state.currentUser) {
+        state.currentUser.xp += reward;
+        state.currentUser.level = Math.max(1, Math.floor(state.currentUser.xp / 150) + 1);
+        notify("Задание выполнено: +" + reward + " XP");
+      }
+
+      saveAll();
+    }
+
+    function openMiniGame() {
+      if (!state.currentUser) {
+        go("login");
+        return;
+      }
+
+      const gameWindow = window.open(
+        "",
+        "dng-cs2-minigame",
+        "width=1280,height=760,menubar=no,toolbar=no,location=no,status=no"
+      );
+
+      if (!gameWindow) {
+        alert("Браузер заблокировал окно игры. Разреши всплывающие окна для сайта.");
+        return;
+      }
+
+      gameWindow.document.open();
+      gameWindow.document.write(getMiniGameHtml());
+      gameWindow.document.close();
+
+      notify("Мини-игра открыта в отдельном окне");
+    }
+
+    function applyMiniGameResult(payload) {
+      if (!payload || payload.type !== "DNG_GAME_RESULT") return;
+      if (!state.currentUser) return;
+
+      const eloChange = Number(payload.eloChange || 0);
+      const isWin = payload.result === "win";
+
+      state.currentUser.elo = Math.max(100, state.currentUser.elo + eloChange);
+      state.currentUser.matches += 1;
+      state.currentUser.xp += isWin ? 60 : 25;
+
+      if (isWin) {
+        state.currentUser.wins += 1;
+      } else {
+        state.currentUser.losses += 1;
+      }
+
+      state.currentUser.level = Math.max(1, Math.floor(state.currentUser.xp / 150) + 1);
+
+      state.matches.unshift({
+        id: Date.now(),
+        map: "DNG Aim Mission",
+        server: "Browser Mini Game",
+        result: isWin ? "Win" : "Lose",
+        score: (payload.kills || 0) + " kills",
+        eloChange,
+        createdAt: payload.createdAt || new Date().toLocaleString("ru-RU")
+      });
+
+      state.matches = state.matches.slice(0, 30);
+
+      updateQuest("matches", 1);
+      if (isWin) updateQuest("wins", 1);
+      if (eloChange > 0) updateQuest("elo", eloChange);
+
+      state.users = state.users.map(user => {
+        return user.username === state.currentUser.username ? state.currentUser : user;
+      });
+
+      localStorage.removeItem("dng_minigame_result");
+
+      notify(
+        "Мини-игра: " +
+        (isWin ? "победа" : "поражение") +
+        ", " +
+        (eloChange > 0 ? "+" : "") +
+        eloChange +
+        " ELO"
+      );
+
+      saveAll();
+      render();
+    }
+
+    window.addEventListener("message", event => {
+      applyMiniGameResult(event.data);
+    });
+
+    window.addEventListener("storage", event => {
+      if (event.key !== "dng_minigame_result") return;
+
+      try {
+        applyMiniGameResult(JSON.parse(event.newValue));
+      } catch {}
+    });
+
+    window.addEventListener("hashchange", () => {
+      state.route = getRoute();
+      render();
+    });
+
+    function sideIcon(symbol) {
+      return `<span class="side-icon">${symbol}</span>`;
+    }
+
+    function renderLayout() {
+      document.getElementById("topNav").innerHTML = topNav.map(([route, label]) => {
+        return `
+          <button class="top-link ${state.route === route ? "active" : ""}" onclick="go('${route}')">
+            ${label}
+          </button>
+        `;
+      }).join("");
+
+      document.getElementById("sideNav").innerHTML = `
+        ${mainNav.map(([route, label, symbol]) => `
+          <button class="side-link ${state.route === route ? "active" : ""}" onclick="go('${route}')">
+            ${sideIcon(symbol)}
+            <span>${label}</span>
+          </button>
+        `).join("")}
+
+        <div class="side-divider"></div>
+
+        ${serviceNav.map(([route, label, symbol]) => `
+          <button class="side-link ${state.route === route ? "active" : ""}" onclick="go('${route}')">
+            ${sideIcon(symbol)}
+            <span>${label}</span>
+          </button>
+        `).join("")}
+      `;
+
+      const actions = document.getElementById("topActions");
+
+      if (state.currentUser) {
+        actions.innerHTML = `
+          <button class="notif">🔔 ${state.notifications.length}</button>
+          <button class="small-action" onclick="go('profile')">${state.currentUser.nickname || state.currentUser.username}</button>
+          <button class="small-action danger" onclick="logout()">Выйти</button>
+        `;
+      } else {
+        actions.innerHTML = `
+          <button class="notif">🔔 ${state.notifications.length}</button>
+          <button class="small-action" onclick="go('login')">Войти</button>
+          <button class="small-action admin" onclick="go('register')">Регистрация</button>
+        `;
+      }
+
+      document.getElementById("rightbar").innerHTML = [
+        ["profile", "DN"],
+        ["feedback", "▱"],
+        ["quests", "☼"],
+        ["inventory", "▣"],
+        ["settings", "⚙"],
+        ["rules", "◈"],
+        ["anticheat", "☼"]
+      ].map(([route, label]) => {
+        return `<button onclick="go('${route}')" title="${route}">${label}</button>`;
+      }).join("");
+    }
+
+    function hero(kicker, title, text, actions = "") {
+      return `
+        <section class="hero">
+          <div class="kicker">${kicker}</div>
+          <h1>${title}</h1>
+          <p>${text}</p>
+          ${actions ? `<div class="hero-actions">${actions}</div>` : ""}
+        </section>
+      `;
+    }
+
+    function renderMatchmaking() {
+      const user = state.currentUser || normalizeUser({
+        username: "guest",
+        nickname: "Гость",
+        password: ""
+      });
+
+      const questDone = state.quests.filter(q => q.progress >= q.goal).length;
+      const progress = Math.min(100, Math.round((user.xp % 150) / 150 * 100));
+
+      return `
+        <div class="page">
+          <div class="home-grid">
+            ${hero(
+              "Europe CS2 5v5 Queue",
+              "Level " + user.level,
+              "Платформа DNG: матчи, ELO, новости, задания, админ-панель и мини-игра перед поиском матча.",
+              `<button class="btn" onclick="openMiniGame()">НАЙТИ МАТЧ</button>
+               <button class="btn dark" onclick="go('leaderboard')">Открыть лидерборд</button>`
+            )}
+
+            <div class="grid" style="margin-top:0">
+              <div class="card">
+                <div class="kicker">Daily quests</div>
+                <h2>${questDone}/3 заданий выполнено 🏆</h2>
+
+                <div class="progress">
+                  <span style="width:${questDone / 3 * 100}%"></span>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2>ELO и уровни</h2>
+                <button class="btn dark" onclick="go('leaderboard')">Открыть лидерборд</button>
+                <p>Последних матчей: ${state.matches.length}</p>
+              </div>
+            </div>
+          </div>
+
+          <section class="profile-strip">
+            <div class="level-circle">${user.level}</div>
+
+            <div>
+              <span class="small-action">ELO ${user.elo || 1000}</span>
+              <h2 style="font-size:34px;margin:12px 0 6px">${user.nickname || user.username}</h2>
+
+              <div class="progress">
+                <span style="width:${progress}%"></span>
+              </div>
+
+              <p>Побед: ${user.wins || 0} • Матчей: ${user.matches || 0} • XP: ${user.xp || 0}</p>
+              <span class="small-action">Верификация пройдена</span>
+            </div>
+          </section>
+
+          <section class="party-grid">
+            <div class="party-card"><div><span class="plus">+</span><p>Пригласить</p></div></div>
+            <div class="party-card"><div><span class="plus">+</span><p>Пригласить</p></div></div>
+            <div class="party-card"><div><div class="avatar">SK</div><b>${user.nickname || "Игрок"}</b></div></div>
+            <div class="party-card"><div><span class="plus">+</span><p>Пригласить</p></div></div>
+            <div class="party-card"><div><span style="font-size:48px">⌕</span><p>Поиск группы</p></div></div>
+          </section>
+
+          <section class="queue-panel">
+            <div class="queue-top">
+              <b>× Тип матча</b>
+              <button class="btn" onclick="openMiniGame()">НАЙТИ МАТЧ</button>
+              <b style="text-align:right">▣ Серверы</b>
+            </div>
+
+            <div class="queue-modes">
+              ${["Стандартный матч", "Суперматч", "Premium Match"].map(mode => `
+                <button class="mode-card" onclick="openMiniGame()">
+                  <strong>${mode} • 5v5</strong>
+                  <span class="muted">Premium подбор • Античит • Карты CS2</span>
+                </button>
+              `).join("")}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderPlay() {
+      const modes = [
+        ["5v5 Ranked", "Классический рейтинговый матч. Победа прибавляет ELO, поражение снимает ELO.", "Найти ranked"],
+        ["Premium Queue", "Приоритетная очередь для Premium игроков: быстрее поиск и сильнее баланс.", "Запустить Premium"],
+        ["Custom Lobby", "Создай комнату для друзей, команды или тренировок.", "Создать лобби"],
+        ["Aim Training", "Мини-игра реакции и стрельбы перед матчем.", "Начать тренировку"]
+      ];
+
+      return `
+        <div class="page">
+          ${hero(
+            "Play",
+            "Играть",
+            "Выбери режим. Нажатие на режим или кнопку поиска откроет мини-игру в отдельном окне браузера.",
+            `<button class="btn" onclick="openMiniGame()">Найти игру</button>`
+          )}
+
+          <section class="grid grid-2">
+            ${modes.map(mode => `
+              <button class="card" style="text-align:left;color:#fff" onclick="openMiniGame()">
+                <h2>${mode[0]}</h2>
+                <p>${mode[1]}</p>
+                <b>${mode[2]}</b>
+              </button>
+            `).join("")}
+          </section>
+        </div>
+      `;
+    }
+
+    function renderMatchRoom() {
+      const last = state.matches[0];
+      const user = state.currentUser || { nickname: "Игрок" };
+      const teamA = [user.nickname || user.username, "aimlord", "rushb", "smokemaster", "entrygod"];
+      const teamB = ["clutchking", "deagleman", "awpghost", "pixelhunter", "ninjadefuse"];
+
+      return `
+        <div class="page">
+          ${hero(
+            "Match room",
+            "Комната матча",
+            "Отдельная страница найденного матча: команды, карта, сервер, принятие матча и результат.",
+            `<button class="btn" onclick="openMiniGame()">Запустить поиск</button>`
+          )}
+
+          <section class="match-room-grid">
+            <div class="card">
+              <h2>Team A</h2>
+              ${teamA.map(name => playerRow(name)).join("")}
+            </div>
+
+            <div class="card" style="text-align:center">
+              <p>Карта</p>
+              <h2 style="font-size:34px">${last ? last.map : "Mirage"}</h2>
+              <p>Сервер: ${last ? last.server : "EU Germany"}</p>
+              <p>Статус: ${last ? "Матч завершён" : "Ожидание игроков"}</p>
+              <div class="score-box">${last ? `${last.result} • ${last.score}` : "Ожидается принятие"}</div>
+            </div>
+
+            <div class="card">
+              <h2>Team B</h2>
+              ${teamB.map(name => playerRow(name)).join("")}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function playerRow(name) {
+      return `
+        <div class="player-row">
+          <span class="avatar-sm">${name.slice(0, 2).toUpperCase()}</span>
+          <b>${name}</b>
+          <span class="ready">готов</span>
+        </div>
+      `;
+    }
+
+
+    let chatPollTimer = null;
+
+    function privilegeLabel(user) {
+      const privileges = Array.isArray(user.privileges) ? user.privileges : [];
+
+      if (!privileges.length) {
+        return "Игрок";
+      }
+
+      const labels = {
+        premium: "Premium",
+        vip: "VIP",
+        captain: "Капитан",
+        moderator: "Модератор",
+        partner: "Партнёр",
+        verified: "Verified"
+      };
+
+      return privileges.map(item => labels[item] || item).join(", ");
+    }
+
+    function renderPrivilegePills(user) {
+      const privileges = Array.isArray(user.privileges) ? user.privileges : [];
+
+      if (!privileges.length) {
+        return `<span class="small-action">Игрок</span>`;
+      }
+
+      return privileges.map(item => `<span class="small-action">${privilegeLabel({ privileges: [item] })}</span>`).join(" ");
+    }
+
+    function safeText(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    async function fetchChatMessages() {
+      const box = document.getElementById("chatMessages");
+
+      if (!box) return;
+
+      if (!API_MODE) {
+        box.innerHTML = `
+          <div class="player-row">
+            <span class="avatar-sm">DN</span>
+            <div>
+              <b>DNG</b>
+              <p class="muted">Чат работает на Render. Локально сообщения не сохраняются.</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/chat/messages");
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Chat load failed");
+        }
+
+        state.chatMessages = Array.isArray(data.messages) ? data.messages : [];
+
+        box.innerHTML = state.chatMessages.length
+          ? state.chatMessages.map(message => `
+            <div class="player-row" style="align-items:flex-start;min-height:auto;padding:14px">
+              <span class="avatar-sm">${safeText((message.nickname || message.username || "DN").slice(0, 2).toUpperCase())}</span>
+              <div style="min-width:0">
+                <b>${safeText(message.nickname || message.username || "Гость")}</b>
+                <span class="muted"> • ${safeText(message.createdAt || "")}</span>
+                <p style="margin:8px 0 0;white-space:pre-wrap;word-break:break-word">${safeText(message.text || "")}</p>
+              </div>
+            </div>
+          `).join("")
+          : `<p class="muted">Пока сообщений нет. Напиши первым.</p>`;
+
+        box.scrollTop = box.scrollHeight;
+      } catch (error) {
+        box.innerHTML = `<p class="muted">Не удалось загрузить чат.</p>`;
+      }
+    }
+
+    async function sendChatMessage() {
+      if (!requireLogin()) return;
+
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+
+      if (!text) {
+        alert("Напиши сообщение");
+        return;
+      }
+
+      if (text.length > 500) {
+        alert("Сообщение слишком длинное. Максимум 500 символов.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/chat/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: state.currentUser.username,
+            nickname: state.currentUser.nickname || state.currentUser.username,
+            text
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          alert(data.error || "Не удалось отправить сообщение");
+          return;
+        }
+
+        input.value = "";
+        await fetchChatMessages();
+      } catch (error) {
+        alert("Ошибка отправки сообщения");
+      }
+    }
+
+    function renderChat() {
+      return `
+        <div class="page">
+          ${hero(
+            "Live communication",
+            "Общий чат DNG",
+            "Живой чат сайта: здесь могут писать все зарегистрированные пользователи. Сообщения сохраняются на сервере Render.",
+            `<button class="btn" onclick="fetchChatMessages()">Обновить чат</button>
+             <button class="btn dark" onclick="go('feedback')">Обратная связь</button>`
+          )}
+
+          <section class="card">
+            <h2>Сообщения</h2>
+            <div id="chatMessages" style="height:430px;overflow:auto;display:grid;gap:10px;margin-top:16px"></div>
+
+            <div class="form" style="margin-top:18px">
+              <textarea id="chatInput" class="textarea" maxlength="500" placeholder="Напиши сообщение в общий чат..."></textarea>
+              <button class="btn" onclick="sendChatMessage()">Отправить</button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+
+    function renderLeaderboard() {
+      const users = [...state.users].map(normalizeUser).sort((a, b) => b.elo - a.elo);
+
+      return `
+        <div class="page">
+          ${hero("Leaderboard", "Лидерборд", "Рейтинг игроков по ELO, победам и количеству матчей.")}
+
+          <section class="card">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Игрок</th>
+                  <th>ELO</th>
+                  <th>Уровень</th>
+                  <th>Привилегии</th>
+                  <th>Победы</th>
+                  <th>Матчи</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                ${users.map((user, index) => `
+                  <tr>
+                    <td>${index + 1}</td>
+                    <td>${user.nickname || user.username}</td>
+                    <td>${user.elo}</td>
+                    <td>${user.level}</td>
+                    <td>${renderPrivilegePills(user)}</td>
+                    <td>${user.wins}</td>
+                    <td>${user.matches}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderNews() {
+      return `
+        <div class="page">
+          ${hero("News", "Новости", "Игровые новости CS2, проекта DNG и обновления платформы.")}
+
+          <section class="grid grid-3">
+            ${state.news.map(item => `
+              <article class="card">
+                <span class="small-action">${item.tag}</span>
+                <h2>${item.title}</h2>
+                <p>${item.text}</p>
+              </article>
+            `).join("")}
+          </section>
+        </div>
+      `;
+    }
+
+    function renderQuests() {
+      return `
+        <div class="page">
+          ${hero("Daily quests", "Ежедневные задания", "Выполняй задания, получай XP и повышай уровень профиля.")}
+
+          <section class="grid grid-3">
+            ${state.quests.map(quest => `
+              <article class="card">
+                <h2>${quest.title}</h2>
+                <p>${quest.progress}/${quest.goal} • Награда: ${quest.reward} XP</p>
+
+                <div class="progress">
+                  <span style="width:${quest.progress / quest.goal * 100}%"></span>
+                </div>
+              </article>
+            `).join("")}
+          </section>
+        </div>
+      `;
+    }
+
+    function renderFeedback() {
+      return `
+        <div class="page">
+          ${hero("Support", "Обратная связь", "Напиши обращение администраторам сайта. Оно появится в админ-панели.")}
+
+          <section class="card">
+            <div class="form">
+              <input class="input" id="ticketSubject" placeholder="Тема обращения" />
+              <textarea class="textarea" id="ticketMessage" placeholder="Опиши проблему или предложение"></textarea>
+              <button class="btn" onclick="sendTicket()">Отправить обращение</button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function sendTicket() {
+      const subject = document.getElementById("ticketSubject").value.trim();
+      const message = document.getElementById("ticketMessage").value.trim();
+
+      if (!subject || !message) {
+        alert("Заполни тему и текст обращения");
+        return;
+      }
+
+      state.tickets.unshift({
+        id: Date.now(),
+        subject,
+        message,
+        author: state.currentUser ? state.currentUser.nickname : "Гость",
+        createdAt: new Date().toLocaleString("ru-RU"),
+        status: "Новое"
+      });
+
+      saveAll();
+      notify("Обращение отправлено");
+      render();
+    }
+
+    function renderLogin() {
+      return `
+        <div class="page">
+          ${hero("Auth", "Вход", "Войди в аккаунт DNG.")}
+
+          <section class="card">
+            <div class="form">
+              <input class="input" id="loginUsername" placeholder="Логин" />
+              <input class="input" id="loginPassword" type="password" placeholder="Пароль" />
+              <button class="btn" onclick="login()">Войти</button>
+              <button class="btn dark" onclick="go('register')">Создать аккаунт</button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    async function login() {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      if (!username || !password) {
+        alert("Заполни логин и пароль");
+        return;
+      }
+
+      if (API_MODE) {
+        try {
+          const response = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            alert(data.error || "Неверный логин или пароль");
+            return;
+          }
+
+          state.currentUser = normalizeUser(data.user);
+          saveAll();
+          go("profile");
+          render();
+          return;
+        } catch (error) {
+          alert("Ошибка входа через сервер");
+          return;
+        }
+      }
+
+      const user = state.users.find(item => item.username === username && item.password === password);
+
+      if (!user) {
+        alert("Неверный логин или пароль");
+        return;
+      }
+
+      state.currentUser = normalizeUser(user);
+      saveAll();
+      go("profile");
+      render();
+    }
+
+    function renderRegister() {
+      return `
+        <div class="page">
+          ${hero("Auth", "Регистрация", "Создай аккаунт DNG. Данные сохраняются в браузере.")}
+
+          <section class="card">
+            <div class="form">
+              <input class="input" id="regUsername" placeholder="Логин" />
+              <input class="input" id="regNickname" placeholder="Никнейм" />
+              <input class="input" id="regPassword" type="password" placeholder="Пароль" />
+              <button class="btn" onclick="register()">Зарегистрироваться</button>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    async function register() {
+      const username = document.getElementById("regUsername").value.trim();
+      const nickname = document.getElementById("regNickname").value.trim() || username;
+      const password = document.getElementById("regPassword").value;
+
+      if (!username || !password) {
+        alert("Заполни логин и пароль");
+        return;
+      }
+
+      if (API_MODE) {
+        try {
+          const response = await fetch("/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, nickname, password })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || !data.ok) {
+            alert(data.error || "Не удалось зарегистрироваться");
+            return;
+          }
+
+          state.currentUser = normalizeUser(data.user);
+          state.users.push(state.currentUser);
+          saveAll();
+          go("profile");
+          render();
+          return;
+        } catch (error) {
+          alert("Ошибка регистрации через сервер");
+          return;
+        }
+      }
+
+      if (state.users.some(user => user.username === username)) {
+        alert("Такой логин уже занят");
+        return;
+      }
+
+      const user = normalizeUser({
+        username,
+        nickname,
+        password,
+        role: "user",
+        elo: 1000,
+        level: 1,
+        wins: 0,
+        losses: 0,
+        matches: 0,
+        xp: 0
+      });
+
+      state.users.push(user);
+      state.currentUser = user;
+      saveAll();
+      go("profile");
+      render();
+    }
+
+    function renderProfile() {
+      if (!state.currentUser) return renderLogin();
+
+      const user = normalizeUser(state.currentUser);
+
+      return `
+        <div class="page">
+          ${hero("Profile", "Профиль игрока", "Статистика аккаунта, ELO, уровень, победы и последние матчи.")}
+
+          <section class="grid grid-2">
+            <div class="card">
+              <div class="level-circle">${user.level}</div>
+              <h2>${user.nickname}</h2>
+              <p>@${user.username} • ${user.role}</p>
+              <p>ELO: <b>${user.elo}</b></p>
+              <p>Побед: ${user.wins} • Поражений: ${user.losses} • Матчей: ${user.matches}</p>
+            </div>
+
+            <div class="card">
+              <h2>Последние матчи</h2>
+
+              ${state.matches.length ? state.matches.slice(0, 6).map(match => `
+                <div class="player-row">
+                  <b>${match.map}</b>
+                  <span class="ready">${match.result} • ${match.eloChange > 0 ? "+" : ""}${match.eloChange} ELO</span>
+                </div>
+              `).join("") : `<p>Пока матчей нет.</p>`}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function requireLogin() {
+      if (!state.currentUser) {
+        go("login");
+        return false;
+      }
+      return true;
+    }
+
+    function createAutoTicket(subject, message, status = "Авто-заявка") {
+      if (!requireLogin()) return;
+
+      state.tickets.unshift({
+        id: Date.now(),
+        subject,
+        message,
+        author: state.currentUser.nickname || state.currentUser.username,
+        createdAt: new Date().toLocaleString("ru-RU"),
+        status
+      });
+
+      saveAll();
+      notify(subject + " отправлено");
+    }
+
+
+
+    async function createPayment(plan, amount) {
+      if (!requireLogin()) return;
+
+      if (!API_MODE) {
+        createAutoTicket(
+          "Заявка на оплату " + plan,
+          "Пользователь хочет оплатить тариф " + plan + " на сумму " + amount + " ₽",
+          "Оплата демо"
+        );
+        alert("Локальный режим: заявка на оплату создана. На Render откроется страница оплаты.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/payments/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan,
+            amount,
+            username: state.currentUser.username,
+            nickname: state.currentUser.nickname || state.currentUser.username
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          alert(data.error || "Не удалось создать оплату");
+          return;
+        }
+
+        window.open(data.paymentUrl, "_blank", "width=720,height=760");
+        notify("Счёт на оплату создан: " + plan);
+      } catch (error) {
+        alert("Ошибка создания платежа");
+      }
+    }
+
+
+    function renderPremium() {
+      const plans = [
+        {
+          name: "Free",
+          amount: 0,
+          price: "0 ₽",
+          text: "Профиль, поиск матча, новости, задания и базовый ELO.",
+          features: ["Базовый матчмейкинг", "Профиль игрока", "Новости", "Ежедневные задания"],
+          action: "Выбрать Free"
+        },
+        {
+          name: "Premium",
+          amount: 199,
+          price: "199 ₽/мес",
+          text: "Приоритетная очередь, расширенная статистика и PRO-профиль.",
+          features: ["Быстрый поиск матча", "PRO-статистика", "Приоритет в Party Finder", "Premium-бейдж"],
+          action: "Оплатить Premium"
+        },
+        {
+          name: "Team",
+          amount: 499,
+          price: "499 ₽/мес",
+          text: "Командная страница, заявки на турниры и аналитика команды.",
+          features: ["Страница команды", "Турнирные заявки", "Аналитика состава", "Приоритет поддержки"],
+          action: "Оплатить Team"
+        }
+      ];
+
+      return `
+        <div class="page">
+          ${hero(
+            "Pricing",
+            "Тарифы и Premium",
+            "Платёжный раздел: пользователь выбирает тариф, сайт создаёт счёт, а владелец видит платежи в скрытой панели.",
+            `<button class="btn" onclick="createPayment('Premium', 199)">Оплатить Premium</button>
+             <button class="btn dark" onclick="createPayment('Team', 499)">Оплатить Team</button>`
+          )}
+
+          <section class="grid grid-3">
+            ${plans.map(plan => `
+              <article class="card">
+                <h2>${plan.name}</h2>
+                <h2 style="font-size:38px">${plan.price}</h2>
+                <p>${plan.text}</p>
+
+                <div style="display:grid;gap:10px;margin:18px 0">
+                  ${plan.features.map(feature => `
+                    <div class="player-row" style="min-height:48px;margin-top:0">
+                      <span class="avatar-sm">✓</span>
+                      <b>${feature}</b>
+                    </div>
+                  `).join("")}
+                </div>
+
+                ${plan.amount > 0
+                  ? `<button class="btn" onclick="createPayment('${plan.name}', ${plan.amount})">${plan.action}</button>`
+                  : `<button class="btn" onclick="createAutoTicket('Тариф Free', 'Пользователь выбрал бесплатный тариф Free')">${plan.action}</button>`
+                }
+              </article>
+            `).join("")}
+          </section>
+
+          <section class="grid grid-3">
+            <article class="card">
+              <h2>Оплата</h2>
+              <p>Сайт создаёт счёт и открывает отдельное окно оплаты. В скрытой панели видно статус платежа.</p>
+            </article>
+
+            <article class="card">
+              <h2>Монетизация</h2>
+              <p>Раздел показывает понятную коммерческую цель сайта: Free → Premium → Team.</p>
+            </article>
+
+            <article class="card">
+              <h2>Контроль</h2>
+              <p>Владелец может отмечать платежи как оплаченные, отменённые или возвращённые.</p>
+            </article>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderSearch() {
+      const players = state.users.map(normalizeUser).sort((a, b) => b.elo - a.elo).slice(0, 8);
+      const news = state.news.slice(0, 5);
+
+      return `
+        <div class="page">
+          ${hero("DNG Search", "Поиск", "Автоматический поиск игроков, команд, новостей и турниров по сайту.", `
+            <input class="input" id="globalSearchInput" placeholder="Введи ник, новость, турнир или команду..." oninput="runGlobalSearch()" />
+            <button class="btn" onclick="runGlobalSearch()">Искать</button>
+          `)}
+
+          <section class="grid grid-3">
+            <article class="card">
+              <h2>Игроки онлайн</h2>
+              <p>Автоматически подтягиваются аккаунты из localStorage.</p>
+              <div class="auto-list">
+                ${players.map(user => `
+                  <div class="auto-row">
+                    <div><strong>${escapeHtml(user.nickname)}</strong><span>ELO ${user.elo} • Level ${user.level}</span></div>
+                    <button class="small-action" onclick="createAutoTicket('Инвайт игроку', 'Хочу пригласить игрока ${escapeHtml(user.nickname)} в пати')">Инвайт</button>
+                  </div>
+                `).join("")}
+              </div>
+            </article>
+
+            <article class="card">
+              <h2>Новости</h2>
+              <p>Быстрый поиск по новостям из админ-панели.</p>
+              <div class="auto-list">
+                ${news.map(item => `
+                  <div class="auto-row">
+                    <div><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.tag)}</span></div>
+                    <button class="small-action" onclick="go('news')">Открыть</button>
+                  </div>
+                `).join("")}
+              </div>
+            </article>
+
+            <article class="card">
+              <h2>Результаты поиска</h2>
+              <div id="searchResults" class="status-box">Начни вводить запрос, и сайт сам покажет совпадения.</div>
+            </article>
+          </section>
+        </div>
+      `;
+    }
+
+    function runGlobalSearch() {
+      const input = document.getElementById("globalSearchInput");
+      const box = document.getElementById("searchResults");
+      if (!input || !box) return;
+
+      const query = input.value.trim().toLowerCase();
+
+      if (!query) {
+        box.innerHTML = "Напиши запрос: ник, ELO, новость, команда, турнир.";
+        return;
+      }
+
+      const users = state.users
+        .map(normalizeUser)
+        .filter(user =>
+          user.username.toLowerCase().includes(query) ||
+          user.nickname.toLowerCase().includes(query) ||
+          String(user.elo).includes(query)
+        );
+
+      const news = state.news.filter(item =>
+        item.title.toLowerCase().includes(query) ||
+        item.text.toLowerCase().includes(query) ||
+        item.tag.toLowerCase().includes(query)
+      );
+
+      const staticResults = [
+        ["Турниры", "tournaments", "Регистрация на турниры DNG"],
+        ["Premium", "premium", "Тарифы и заявки на Premium"],
+        ["Команды", "teams", "Создание команды и подбор состава"],
+        ["Лидерборд", "leaderboard", "Рейтинг по ELO"],
+        ["Задания", "quests", "Ежедневные задания"]
+      ].filter(item => item.join(" ").toLowerCase().includes(query));
+
+      const html = [
+        ...users.map(user => `<div class="auto-row"><div><strong>${escapeHtml(user.nickname)}</strong><span>Игрок • ELO ${user.elo}</span></div><button class="small-action" onclick="go('profile')">Профиль</button></div>`),
+        ...news.map(item => `<div class="auto-row"><div><strong>${escapeHtml(item.title)}</strong><span>Новость • ${escapeHtml(item.tag)}</span></div><button class="small-action" onclick="go('news')">Открыть</button></div>`),
+        ...staticResults.map(item => `<div class="auto-row"><div><strong>${item[0]}</strong><span>${item[2]}</span></div><button class="small-action" onclick="go('${item[1]}')">Перейти</button></div>`)
+      ].join("");
+
+      box.innerHTML = html || "Ничего не найдено. Попробуй другой запрос.";
+    }
+
+    function renderFriends() {
+      const user = state.currentUser || { nickname: "Гость", elo: 1000, level: 1 };
+      const candidates = [
+        ["rushb", 1040, "entry"],
+        ["clutchking", 1180, "clutch"],
+        ["deagleman", 980, "rifle"],
+        ["awpghost", 1250, "AWP"],
+        ["pixelhunter", 1095, "support"],
+        ["ninjadefuse", 1015, "defuse"]
+      ];
+
+      const recommended = candidates
+        .map(player => ({ name: player[0], elo: player[1], role: player[2], diff: Math.abs(player[1] - (user.elo || 1000)) }))
+        .sort((a, b) => a.diff - b.diff)
+        .slice(0, 4);
+
+      return `
+        <div class="page">
+          ${hero("Party Finder", "Party Finder", "Автоматический подбор тиммейтов по ELO и роли. Можно сразу отправить заявку в админку.", `
+            <button class="btn" onclick="autoFindParty()">Авто-подбор пати</button>
+            <button class="btn dark" onclick="openMiniGame()">Проверить aim перед пати</button>
+          `)}
+
+          <section class="grid grid-2">
+            <article class="card">
+              <h2>Подходящие игроки</h2>
+              <p>Подбор учитывает твой ELO: ${user.elo || 1000}.</p>
+              <div class="auto-list">
+                ${recommended.map(player => `
+                  <div class="auto-row">
+                    <div><strong>${player.name}</strong><span>ELO ${player.elo} • ${player.role} • разница ${player.diff}</span></div>
+                    <button class="small-action" onclick="createAutoTicket('Инвайт в пати', 'Хочу пригласить ${player.name} в группу')">Позвать</button>
+                  </div>
+                `).join("")}
+              </div>
+            </article>
+
+            <article class="card">
+              <h2>Авто-лобби</h2>
+              <p>Сайт может сам собрать заявку на 5v5 и передать её администраторам.</p>
+              <div id="partyStatus" class="status-box">Нажми авто-подбор, чтобы собрать стак.</div>
+            </article>
+          </section>
+        </div>
+      `;
+    }
+
+    function autoFindParty() {
+      if (!requireLogin()) return;
+
+      const names = ["rushb", "clutchking", "deagleman", "awpghost"];
+      const box = document.getElementById("partyStatus");
+      if (box) {
+        box.innerHTML = `
+          <b>Пати собрано:</b><br>
+          ${state.currentUser.nickname}, ${names.join(", ")}<br><br>
+          Режим: 5v5 Ranked • Средний ELO: ${Math.round((state.currentUser.elo + 1040 + 1180 + 980 + 1250) / 5)}
+        `;
+      }
+
+      createAutoTicket("Авто-подбор Party Finder", "Собрать пати: " + [state.currentUser.nickname, ...names].join(", "));
+    }
+
+    function renderTournaments() {
+      const tournaments = [
+        ["DNG Weekend Cup", "5v5", "Суббота 19:00", "Приз: Premium 30 дней"],
+        ["School Cyber Cup", "5v5", "Воскресенье 17:00", "Приз: 500 ELO фонд"],
+        ["Aim Masters", "1v1", "Каждый день", "Приз: бейдж профиля"]
+      ];
+
+      return `
+        <div class="page">
+          ${hero("Tournaments", "Турниры", "Автоматическая заявка на турнир: выбираешь турнир — сайт сам создаёт обращение в админ-панель.", `
+            <button class="btn" onclick="createAutoTicket('Заявка на свой турнир', 'Хочу создать свой турнир на DNG')">Создать турнир</button>
+          `)}
+
+          <section class="grid grid-3">
+            ${tournaments.map(tournament => `
+              <article class="action-card">
+                <div>
+                  <h2>${tournament[0]}</h2>
+                  <p>${tournament[1]} • ${tournament[2]}</p>
+                  <div class="tag-row"><span class="tag">${tournament[3]}</span><span class="tag">Авто-регистрация</span></div>
+                </div>
+                <button class="btn dark" onclick="registerTournament('${tournament[0]}')">Подать заявку</button>
+              </article>
+            `).join("")}
+          </section>
+        </div>
+      `;
+    }
+
+    function registerTournament(name) {
+      createAutoTicket("Заявка на турнир", "Хочу участвовать в турнире: " + name, "Турнирная заявка");
+    }
+
+    function renderTeams() {
+      const user = state.currentUser || { nickname: "Гость", elo: 1000 };
+      const roles = ["Капитан", "AWP", "Entry", "Support", "Lurker"];
+
+      return `
+        <div class="page">
+          ${hero("Teams", "Команды", "Автоматическое создание команды, подбор ролей и заявка на регистрацию состава.", `
+            <button class="btn" onclick="autoBuildTeam()">Собрать команду автоматически</button>
+          `)}
+
+          <section class="grid grid-2">
+            <article class="card">
+              <h2>Создать команду</h2>
+              <div class="form">
+                <input class="input" id="teamName" placeholder="Название команды" value="DNG ${escapeHtml(user.nickname || "Team")}" />
+                <select class="select" id="teamRole">
+                  ${roles.map(role => `<option>${role}</option>`).join("")}
+                </select>
+                <button class="btn" onclick="createTeamRequest()">Отправить заявку команды</button>
+              </div>
+            </article>
+
+            <article class="card">
+              <h2>Авто-состав</h2>
+              <div id="teamStatus" class="status-box">Нажми кнопку, и сайт сам соберёт примерный состав по ролям.</div>
+            </article>
+          </section>
+        </div>
+      `;
+    }
+
+    function autoBuildTeam() {
+      const roster = [
+        ["Игрок", "Капитан"],
+        ["awpghost", "AWP"],
+        ["rushb", "Entry"],
+        ["pixelhunter", "Support"],
+        ["ninjadefuse", "Lurker"]
+      ];
+
+      const box = document.getElementById("teamStatus");
+      if (box) {
+        box.innerHTML = roster.map(row => `<div class="auto-row"><strong>${row[0]}</strong><span>${row[1]}</span></div>`).join("");
+      }
+
+      notify("Авто-состав команды собран");
+    }
+
+    function createTeamRequest() {
+      if (!requireLogin()) return;
+
+      const name = document.getElementById("teamName").value.trim() || "DNG Team";
+      const role = document.getElementById("teamRole").value;
+
+      createAutoTicket("Регистрация команды", "Команда: " + name + ". Моя роль: " + role, "Командная заявка");
+    }
+
+    function renderRules() {
+      return `
+        <div class="page">
+          ${hero("Rules", "Правила", "Автоматическая проверка текста жалобы/ника на нарушения и быстрые действия.", `
+            <button class="btn" onclick="runRuleCheck()">Проверить нарушение</button>
+          `)}
+
+          <section class="grid grid-2">
+            <article class="card">
+              <h2>Проверка правила</h2>
+              <div class="form">
+                <input class="input" id="ruleNickname" placeholder="Ник игрока" />
+                <textarea class="textarea" id="ruleText" placeholder="Вставь сообщение, жалобу или описание нарушения"></textarea>
+                <button class="btn" onclick="runRuleCheck()">Проверить автоматически</button>
+              </div>
+            </article>
+
+            <article class="card">
+              <h2>Результат</h2>
+              <div id="ruleResult" class="status-box">Проверка покажет: токсичность, спам, подозрение на чит, рекомендацию действия.</div>
+            </article>
+          </section>
+        </div>
+      `;
+    }
+
+    function runRuleCheck() {
+      const nick = (document.getElementById("ruleNickname")?.value || "Игрок").trim();
+      const text = (document.getElementById("ruleText")?.value || "").toLowerCase();
+      const result = document.getElementById("ruleResult");
+      if (!result) return;
+
+      const flags = [];
+      if (text.includes("чит") || text.includes("aim") || text.includes("wallhack")) flags.push("подозрение на читы");
+      if (text.includes("оск") || text.includes("мат") || text.includes("токс")) flags.push("токсичное поведение");
+      if (text.includes("спам") || text.includes("реклама")) flags.push("спам/реклама");
+      if (text.length < 10) flags.push("мало данных");
+
+      const verdict = flags.length ? flags.join(", ") : "нарушений не найдено";
+
+      result.innerHTML = `
+        <b>${escapeHtml(nick)}</b><br>
+        Вердикт: ${verdict}<br>
+        Рекомендация: ${flags.length && !flags.includes("мало данных") ? "создать обращение админам" : "наблюдать дальше"}
+        <div class="inline-actions">
+          <button class="small-action admin" onclick="createAutoTicket('Проверка нарушения', 'Игрок: ${escapeHtml(nick)}. Вердикт: ${escapeHtml(verdict)}')">Отправить админам</button>
+        </div>
+      `;
+    }
+
+    function renderContacts() {
+      return `
+        <div class="page">
+          ${hero("Contacts", "Контакты", "Быстрая связь с администрацией: поддержка, партнёрство, турниры и баг-репорт.", `
+            <button class="btn" onclick="createAutoTicket('Срочная связь', 'Нужна связь с администрацией DNG')">Быстрая заявка</button>
+          `)}
+
+          <section class="action-grid">
+            ${[
+              ["Поддержка", "Проблемы со входом, матчем или ELO", "support@dng.local"],
+              ["Турниры", "Заявки на проведение турниров", "tournaments@dng.local"],
+              ["Партнёрство", "Реклама, интеграции, команды", "partners@dng.local"]
+            ].map(item => `
+              <article class="action-card">
+                <div><h2>${item[0]}</h2><p>${item[1]}</p><div class="tag-row"><span class="tag">${item[2]}</span></div></div>
+                <button class="btn dark" onclick="createAutoTicket('Контакт: ${item[0]}', 'Нужна связь по теме: ${item[0]}')">Написать</button>
+              </article>
+            `).join("")}
+          </section>
+        </div>
+      `;
+    }
+
+    function renderPrivacy() {
+      const data = {
+        users: state.users.length,
+        tickets: state.tickets.length,
+        news: state.news.length,
+        matches: state.matches.length,
+        quests: state.quests.length
+      };
+
+      return `
+        <div class="page">
+          ${hero("Privacy", "Политика", "Центр данных: экспорт, очистка и просмотр того, что сайт хранит в браузере.", `
+            <button class="btn" onclick="exportData()">Экспортировать данные</button>
+            <button class="btn dark" onclick="clearLocalData()">Очистить localStorage</button>
+          `)}
+
+          <section class="grid grid-3">
+            ${Object.entries(data).map(row => `
+              <article class="mini-stat"><b>${row[1]}</b><span>${row[0]}</span></article>
+            `).join("")}
+          </section>
+
+          <section class="card" style="margin-top:26px">
+            <h2>Что хранится</h2>
+            <p>Аккаунты, сессия, обращения, новости, история матчей и задания хранятся локально в браузере через localStorage.</p>
+          </section>
+        </div>
+      `;
+    }
+
+    function exportData() {
+      const payload = {
+        users: state.users,
+        currentUser: state.currentUser,
+        tickets: state.tickets,
+        news: state.news,
+        matches: state.matches,
+        quests: state.quests,
+        exportedAt: new Date().toISOString()
+      };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "dng-data-export.json";
+      link.click();
+      URL.revokeObjectURL(url);
+      notify("Данные экспортированы");
+    }
+
+    function clearLocalData() {
+      if (!confirm("Точно очистить данные сайта в этом браузере?")) return;
+
+      [STORAGE_USERS, STORAGE_SESSION, STORAGE_TICKETS, STORAGE_NEWS, STORAGE_MATCHES, STORAGE_QUESTS, "dng_minigame_result"].forEach(key => {
+        localStorage.removeItem(key);
+      });
+
+      state = {
+        route: "matchmaking",
+        users: loadUsers(),
+        currentUser: null,
+        tickets: [],
+        news: defaultNews,
+        matches: [],
+        quests: defaultQuests,
+        notifications: []
+      };
+
+      saveAll();
+      go("matchmaking");
+      render();
+    }
+
+    function renderInventory() {
+      const user = state.currentUser || normalizeUser({ username: "guest", nickname: "Гость", password: "" });
+      const rewards = [
+        ["DNG Rookie Badge", user.level >= 1, "Выдаётся за регистрацию"],
+        ["Steel Wings Medal", user.level >= 2, "Выдаётся за Level 2"],
+        ["Aim Mission Coin", user.wins >= 1, "Выдаётся за первую победу"],
+        ["Premium Trial Token", user.matches >= 3, "Выдаётся за 3 матча"]
+      ];
+
+      return `
+        <div class="page">
+          ${hero("Inventory", "Инвентарь", "Автоматические награды за уровень, победы и активность.", `
+            <button class="btn" onclick="claimRewards()">Забрать доступные награды</button>
+          `)}
+
+          <section class="grid grid-2">
+            ${rewards.map(reward => `
+              <article class="card">
+                <h2>${reward[0]}</h2>
+                <p>${reward[2]}</p>
+                <div class="tag-row"><span class="tag">${reward[1] ? "Доступно" : "Закрыто"}</span></div>
+              </article>
+            `).join("")}
+          </section>
+        </div>
+      `;
+    }
+
+    function claimRewards() {
+      if (!requireLogin()) return;
+      notify("Доступные награды добавлены в инвентарь");
+      createAutoTicket("Выдача наград", "Пользователь запросил выдачу доступных наград инвентаря", "Инвентарь");
+    }
+
+    function renderMaps() {
+      const maps = ["Mirage", "Inferno", "Nuke", "Ancient", "Anubis", "Vertigo", "Dust II"];
+
+      return `
+        <div class="page">
+          ${hero("Maps", "Карты", "Автоматический выбор карты и сервера под матч.", `
+            <button class="btn" onclick="pickMap()">Случайная карта</button>
+          `)}
+
+          <section class="grid grid-3">
+            ${maps.map(map => `<article class="card"><h2>${map}</h2><p>Пул CS2 • 5v5 • DNG Queue</p></article>`).join("")}
+          </section>
+
+          <section class="card" style="margin-top:26px">
+            <h2>Авто-выбор</h2>
+            <div id="mapResult" class="status-box">Нажми кнопку, чтобы сайт выбрал карту и регион.</div>
+          </section>
+        </div>
+      `;
+    }
+
+    function pickMap() {
+      const maps = ["Mirage", "Inferno", "Nuke", "Ancient", "Anubis", "Vertigo", "Dust II"];
+      const servers = ["EU Germany", "EU Poland", "EU Netherlands", "EU Sweden"];
+      const map = maps[Math.floor(Math.random() * maps.length)];
+      const server = servers[Math.floor(Math.random() * servers.length)];
+      const ping = 10 + Math.floor(Math.random() * 36);
+      const box = document.getElementById("mapResult");
+      if (box) box.innerHTML = `<b>${map}</b><br>Сервер: ${server}<br>Ожидаемый ping: ${ping} ms`;
+      notify("Карта выбрана: " + map);
+    }
+
+    function renderServers() {
+      const servers = [
+        ["EU Germany", "Frankfurt", 12],
+        ["EU Poland", "Warsaw", 21],
+        ["EU Netherlands", "Amsterdam", 28],
+        ["EU Sweden", "Stockholm", 34]
+      ];
+
+      return `
+        <div class="page">
+          ${hero("Servers", "Серверы", "Автоматическая проверка задержки и выбор лучшего региона.", `
+            <button class="btn" onclick="scanServers()">Проверить ping</button>
+          `)}
+
+          <section class="grid grid-2">
+            ${servers.map(server => `
+              <article class="card">
+                <h2>${server[0]}</h2>
+                <p>${server[1]} • базовый ping ${server[2]} ms</p>
+                <div class="progress big"><span style="width:${100 - server[2]}%"></span></div>
+              </article>
+            `).join("")}
+          </section>
+
+          <section class="card" style="margin-top:26px">
+            <h2>Результат проверки</h2>
+            <div id="serverScan" class="status-box">Нажми проверку, чтобы выбрать лучший сервер.</div>
+          </section>
+        </div>
+      `;
+    }
+
+    function scanServers() {
+      const box = document.getElementById("serverScan");
+      if (!box) return;
+      box.innerHTML = "Проверяю сервера...";
+      const servers = ["EU Germany — 12 ms", "EU Poland — 21 ms", "EU Netherlands — 28 ms", "EU Sweden — 34 ms"];
+      setTimeout(() => {
+        box.innerHTML = `<b>Лучший сервер:</b> ${servers[0]}<br>${servers.join("<br>")}`;
+        notify("Лучший сервер выбран: EU Germany");
+      }, 700);
+    }
+
+    function renderAnticheat() {
+      return `
+        <div class="page">
+          ${hero("Anticheat", "Античит", "Демо-проверка клиента перед матчем: файлы, поведение, подозрительные действия.", `
+            <button class="btn" onclick="runAnticheat()">Запустить проверку</button>
+          `)}
+
+          <section class="grid grid-3">
+            <article class="mini-stat"><b id="acFiles">0%</b><span>Файлы</span></article>
+            <article class="mini-stat"><b id="acBehavior">0%</b><span>Поведение</span></article>
+            <article class="mini-stat"><b id="acStatus">WAIT</b><span>Статус</span></article>
+          </section>
+
+          <section class="card" style="margin-top:26px">
+            <h2>Лог проверки</h2>
+            <div id="acLog" class="status-box">Проверка ещё не запускалась.</div>
+          </section>
+        </div>
+      `;
+    }
+
+    function runAnticheat() {
+      const files = document.getElementById("acFiles");
+      const behavior = document.getElementById("acBehavior");
+      const status = document.getElementById("acStatus");
+      const log = document.getElementById("acLog");
+      let value = 0;
+      if (log) log.innerHTML = "Сканирование началось...";
+
+      const timer = setInterval(() => {
+        value += 10;
+        if (files) files.textContent = value + "%";
+        if (behavior) behavior.textContent = Math.max(0, value - 20) + "%";
+        if (log) log.innerHTML += `<br>Проверка модуля ${value}%`;
+        if (value >= 100) {
+          clearInterval(timer);
+          if (status) status.textContent = "OK";
+          if (log) log.innerHTML += "<br><b>Нарушений не найдено. Игрок допущен к матчу.</b>";
+          notify("Античит: проверка пройдена");
+        }
+      }, 180);
+    }
+
+    function renderSettings() {
+      return `
+        <div class="page">
+          ${hero("Settings", "Настройки", "Настрой сайт под себя: быстрые действия, звук мини-игры и сброс данных.", `
+            <button class="btn" onclick="saveSettings()">Сохранить настройки</button>
+          `)}
+
+          <section class="grid grid-2">
+            <article class="card">
+              <h2>Профиль сайта</h2>
+              <div class="form">
+                <select class="select" id="settingTheme">
+                  <option>Steel Wings Dark</option>
+                  <option>Liquid Glass</option>
+                  <option>Classic Black</option>
+                </select>
+                <select class="select" id="settingQueue">
+                  <option>5v5 Ranked</option>
+                  <option>Premium Queue</option>
+                  <option>Aim Training</option>
+                </select>
+                <button class="btn" onclick="saveSettings()">Сохранить</button>
+              </div>
+            </article>
+
+            <article class="card">
+              <h2>Данные</h2>
+              <p>Можно экспортировать или очистить localStorage.</p>
+              <div class="inline-actions">
+                <button class="btn dark" onclick="exportData()">Экспорт</button>
+                <button class="btn dark" onclick="clearLocalData()">Очистить</button>
+              </div>
+            </article>
+          </section>
+        </div>
+      `;
+    }
+
+    function saveSettings() {
+      const theme = document.getElementById("settingTheme")?.value || "Steel Wings Dark";
+      const queue = document.getElementById("settingQueue")?.value || "5v5 Ranked";
+      localStorage.setItem("dng_settings", JSON.stringify({ theme, queue, savedAt: new Date().toLocaleString("ru-RU") }));
+      notify("Настройки сохранены: " + theme + ", " + queue);
+    }
+
+    function renderStats() {
+      const user = state.currentUser || normalizeUser({ username: "guest", nickname: "Гость", password: "" });
+      const winrate = user.matches ? Math.round((user.wins / user.matches) * 100) : 0;
+
+      return `
+        <div class="page">
+          ${hero("Stats", "Статистика", "Автоматическая аналитика профиля: ELO, winrate, матчи, прогресс.", `
+            <button class="btn" onclick="openMiniGame()">Улучшить статистику</button>
+          `)}
+
+          <section class="grid grid-3">
+            <article class="mini-stat"><b>${user.elo}</b><span>ELO</span></article>
+            <article class="mini-stat"><b>${winrate}%</b><span>Winrate</span></article>
+            <article class="mini-stat"><b>${user.matches}</b><span>Матчи</span></article>
+            <article class="mini-stat"><b>${user.level}</b><span>Уровень</span></article>
+            <article class="mini-stat"><b>${user.xp}</b><span>XP</span></article>
+            <article class="mini-stat"><b>${user.wins}</b><span>Победы</span></article>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderLeague() {
+      const user = state.currentUser || normalizeUser({ username: "guest", nickname: "Гость", password: "" });
+      const division = user.elo >= 1400 ? "Elite" : user.elo >= 1200 ? "Gold" : user.elo >= 1000 ? "Silver" : "Bronze";
+      const next = division === "Elite" ? 1500 : division === "Gold" ? 1400 : division === "Silver" ? 1200 : 1000;
+      const progress = Math.min(100, Math.round((user.elo / next) * 100));
+
+      return `
+        <div class="page">
+          ${hero("League", "Лига", "Автоматическое определение дивизиона по ELO и прогресса до следующей лиги.", `
+            <button class="btn" onclick="go('leaderboard')">Открыть рейтинг</button>
+          `)}
+
+          <section class="grid grid-2">
+            <article class="card">
+              <h2>${division} Division</h2>
+              <p>ELO: ${user.elo} • Следующая цель: ${next}</p>
+              <div class="progress big"><span style="width:${progress}%"></span></div>
+            </article>
+            <article class="card">
+              <h2>Награды сезона</h2>
+              <p>За повышение лиги выдаются бейджи, Premium-токены и место в лидерборде.</p>
+              <button class="btn dark" onclick="claimRewards()">Проверить награды</button>
+            </article>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderFaq() {
+      const items = [
+        ["Как работает ELO?", "Победа в мини-игре прибавляет ELO, поражение снимает. Результат сохраняется в профиле."],
+        ["Где админка?", "Кнопка появляется после входа под админ-аккаунтом."],
+        ["Как добавить новость?", "Войди как админ и открой админ-панель."],
+        ["Где данные?", "Данные хранятся в localStorage браузера."]
+      ];
+
+      return `
+        <div class="page">
+          ${hero("FAQ", "FAQ", "Ответы на вопросы с быстрыми действиями.", `
+            <button class="btn" onclick="go('feedback')">Задать вопрос</button>
+          `)}
+
+          <section class="grid grid-2">
+            ${items.map(item => `
+              <article class="card">
+                <h2>${item[0]}</h2>
+                <p>${item[1]}</p>
+              </article>
+            `).join("")}
+          </section>
+        </div>
+      `;
+    }
+
+    function renderRulesShort(title, text) {
+      return genericPage(title, text);
+    }
+
+    function genericPage(title, text) {
+      return `
+        <div class="page">
+          ${hero("DNG", title, text, `<button class="btn" onclick="go('matchmaking')">На главную</button>`)}
+
+          <section class="grid grid-3">
+            <article class="card">
+              <h2>Раздел работает</h2>
+              <p>Это отдельная страница сайта, не одностраничный блок.</p>
+            </article>
+
+            <article class="card">
+              <h2>Функционал</h2>
+              <p>Демо-логика, карточки, переходы и визуальная структура.</p>
+            </article>
+
+            <article class="card">
+              <h2>DNG</h2>
+              <p>Платформа матчей, профиля, ELO и новостей.</p>
+            </article>
+          </section>
+        </div>
+      `;
+    }
+
+    function render() {
+      saveAll();
+      renderLayout();
+
+      const pages = {
+        "matchmaking": renderMatchmaking,
+        "play": renderPlay,
+        "match-room": renderMatchRoom,
+        "leaderboard": renderLeaderboard,
+        "news": renderNews,
+        "chat": renderChat,
+        "quests": renderQuests,
+        "feedback": renderFeedback,
+        "login": renderLogin,
+        "register": renderRegister,
+        "profile": renderProfile,
+        
+        "premium": renderPremium,
+        "search": renderSearch,
+        "friends": renderFriends,
+        "tournaments": renderTournaments,
+        "teams": renderTeams,
+        "rules": renderRules,
+        "contacts": renderContacts,
+        "privacy": renderPrivacy,
+        "inventory": renderInventory,
+        "maps": renderMaps,
+        "servers": renderServers,
+        "anticheat": renderAnticheat,
+        "settings": renderSettings,
+        "stats": renderStats,
+        "league": renderLeague,
+        "faq": renderFaq,
+        "testing": () => genericPage("Тестирование", "Проверка сайта: авторизация, матчи, админка и формы.")
+      };
+
+      document.getElementById("app").innerHTML = (pages[state.route] || (() => genericPage("404", "Такой страницы нет.")))();
+
+      if (chatPollTimer) {
+        clearInterval(chatPollTimer);
+        chatPollTimer = null;
+      }
+
+      if (state.route === "chat") {
+        fetchChatMessages();
+        chatPollTimer = setInterval(fetchChatMessages, 3000);
+      }
+    }
+
+    function getMiniGameHtml() {
+      return `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>DNG Aim Mission</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #020202;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  body {
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,.08), transparent 30%),
+      radial-gradient(circle at 80% 80%, rgba(255,0,0,.12), transparent 30%),
+      linear-gradient(135deg, #020202, #090b12 55%, #000);
+  }
+  .game-shell {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 330px;
+  }
+  .game-area {
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid rgba(255,255,255,.14);
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px),
+      radial-gradient(circle at center, rgba(255,255,255,.10), transparent 35%),
+      #05070d;
+    background-size: 48px 48px, 48px 48px, auto, auto;
+    cursor: crosshair;
+  }
+  .hud {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    pointer-events: none;
+  }
+  .hud-card {
+    min-width: 90px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(0,0,0,.58);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+  }
+  .hud-card span {
+    display: block;
+    color: #9ca3af;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+  }
+  .hud-card b {
+    display: block;
+    margin-top: 4px;
+    font-size: 22px;
+  }
+  .side-panel {
+    padding: 20px;
+    height: 100vh;
+    overflow: auto;
+    background: rgba(0,0,0,.76);
+    backdrop-filter: blur(18px);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .logo-mark {
+    width: 54px;
+    height: 54px;
+    border-radius: 18px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.06);
+    font-weight: 1000;
+    box-shadow: 0 0 24px rgba(255,255,255,.12);
+  }
+  .logo h1 {
+    margin: 0;
+    font-size: 26px;
+    line-height: .9;
+  }
+  .logo p {
+    margin: 4px 0 0;
+    color: #9ca3af;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .18em;
+  }
+  .panel-card {
+    margin-bottom: 14px;
+    padding: 16px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.045);
+    border-radius: 22px;
+  }
+  .panel-card h2 {
+    margin: 0 0 10px;
+    font-size: 18px;
+  }
+  .panel-card p {
+    margin: 0;
+    color: #aaa;
+    line-height: 1.5;
+    font-size: 14px;
+  }
+  .btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 13px 15px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,.16);
+    background: linear-gradient(135deg, #fff, #777);
+    color: #050505;
+    font-weight: 1000;
+    cursor: pointer;
+    transition: .2s;
+  }
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 24px rgba(255,255,255,.16);
+  }
+  .btn.dark {
+    background: rgba(255,255,255,.06);
+    color: white;
+  }
+  .setting {
+    margin-top: 12px;
+  }
+  .setting label {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+    color: #d1d5db;
+    font-size: 13px;
+    font-weight: 900;
+  }
+  .setting input,
+  .setting select {
+    width: 100%;
+    accent-color: white;
+  }
+  select {
+    border: 1px solid rgba(255,255,255,.12);
+    background: #090909;
+    color: white;
+    border-radius: 12px;
+    padding: 10px;
+    outline: none;
+  }
+  .overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgba(0,0,0,.78);
+    backdrop-filter: blur(12px);
+  }
+  .overlay-card {
+    width: min(620px, 100%);
+    padding: 28px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,.16);
+    background:
+      radial-gradient(circle at 50% 0%, rgba(255,255,255,.12), transparent 40%),
+      rgba(0,0,0,.86);
+    border-radius: 32px;
+    box-shadow: 0 0 70px rgba(255,255,255,.14);
+  }
+  .overlay-card h2 {
+    margin: 0;
+    font-size: clamp(34px, 6vw, 64px);
+    line-height: .92;
+    text-transform: uppercase;
+  }
+  .overlay-card p {
+    max-width: 520px;
+    margin: 16px auto 0;
+    color: #aaa;
+    line-height: 1.6;
+  }
+  .kbd {
+    display: inline-flex;
+    min-width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    margin: 2px;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 8px;
+    background: rgba(255,255,255,.06);
+    color: white;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  .result-win { color: #86efac; }
+  .result-lose { color: #fca5a5; }
+  .crosshair {
+    position: absolute;
+    z-index: 5;
+    width: 34px;
+    height: 34px;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+  }
+  .crosshair::before,
+  .crosshair::after {
+    content: "";
+    position: absolute;
+    background: white;
+    box-shadow: 0 0 10px rgba(255,255,255,.8);
+  }
+  .crosshair::before {
+    left: 50%;
+    top: 0;
+    width: 2px;
+    height: 34px;
+    transform: translateX(-50%);
+  }
+  .crosshair::after {
+    top: 50%;
+    left: 0;
+    width: 34px;
+    height: 2px;
+    transform: translateY(-50%);
+  }
+  .music-note {
+    margin-top: 8px;
+    color: #9ca3af;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div class="game-shell">
+  <div class="game-area">
+    <canvas id="game"></canvas>
+    <div class="crosshair" id="crosshair"></div>
+    <div class="hud">
+      <div class="hud-card"><span>HP</span><b id="hp">100</b></div>
+      <div class="hud-card"><span>Kills</span><b id="kills">0</b></div>
+      <div class="hud-card"><span>Time</span><b id="time">60</b></div>
+      <div class="hud-card"><span>Ammo</span><b id="ammo">30</b></div>
+      <div class="hud-card"><span>ELO</span><b id="eloPreview">0</b></div>
+    </div>
+    <div class="overlay" id="startOverlay">
+      <div class="overlay-card">
+        <h2>DNG Aim Mission</h2>
+        <p>Уничтожь нужное количество ботов до конца времени. Победа прибавит ELO, поражение снимет ELO.</p>
+        <p>
+          <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span>
+          или
+          <span class="kbd">↑</span><span class="kbd">←</span><span class="kbd">↓</span><span class="kbd">→</span>
+          <br />
+          Мышь — прицел, ЛКМ / Space — выстрел, R — перезарядка
+        </p>
+        <button class="btn" id="startBtn">Начать игру</button>
+        <button class="btn dark" id="closeStartBtn">Закрыть окно</button>
+      </div>
+    </div>
+    <div class="overlay" id="resultOverlay" style="display:none;">
+      <div class="overlay-card">
+        <h2 id="resultTitle">Победа</h2>
+        <p id="resultText"></p>
+        <button class="btn" id="sendResultBtn">Забрать результат и закрыть</button>
+        <button class="btn dark" id="restartBtn">Сыграть ещё раз</button>
+      </div>
+    </div>
+  </div>
+  <aside class="side-panel">
+    <div class="logo">
+      <div class="logo-mark">DNG</div>
+      <div>
+        <h1>DNG</h1>
+        <p>CS2 MINI GAME</p>
+      </div>
+    </div>
+    <div class="panel-card">
+      <h2>Цель игры</h2>
+      <p>Набери нужное количество убийств и выживи до конца раунда. Победа даст ELO, поражение снимет ELO.</p>
+    </div>
+    <div class="panel-card">
+      <h2>Настройки игры</h2>
+      <div class="setting">
+        <label>Сложность <span id="difficultyText">Normal</span></label>
+        <select id="difficulty">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+          <option value="insane">Insane</option>
+        </select>
+      </div>
+      <div class="setting">
+        <label>Скорость игрока <span id="speedText">4</span></label>
+        <input id="speed" type="range" min="2" max="8" step="1" value="4" />
+      </div>
+      <div class="setting">
+        <label>Чувствительность <span id="sensText">1.0</span></label>
+        <input id="sensitivity" type="range" min="0.4" max="2.2" step="0.1" value="1" />
+      </div>
+      <div class="setting">
+        <label>Громкость музыки <span id="volumeText">40%</span></label>
+        <input id="volume" type="range" min="0" max="100" step="5" value="40" />
+      </div>
+      <div class="setting">
+        <label>Время раунда <span id="roundText">60s</span></label>
+        <input id="roundTime" type="range" min="30" max="120" step="15" value="60" />
+      </div>
+      <div class="setting">
+        <label>Цвет прицела</label>
+        <select id="crosshairColor">
+          <option value="white" selected>White</option>
+          <option value="#22c55e">Green</option>
+          <option value="#ef4444">Red</option>
+          <option value="#38bdf8">Blue</option>
+          <option value="#facc15">Yellow</option>
+        </select>
+      </div>
+      <button class="btn dark" id="musicBtn">Музыка: выкл</button>
+      <p class="music-note">Музыка генерируется прямо в браузере, отдельный аудиофайл не нужен.</p>
+    </div>
+    <div class="panel-card">
+      <h2>Управление</h2>
+      <p>WASD / стрелки — движение<br />Мышь — прицел<br />ЛКМ / Space — стрелять<br />R — перезарядка</p>
+    </div>
+  </aside>
+</div>
+<script>
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const hpEl = document.getElementById("hp");
+  const killsEl = document.getElementById("kills");
+  const timeEl = document.getElementById("time");
+  const ammoEl = document.getElementById("ammo");
+  const eloPreviewEl = document.getElementById("eloPreview");
+  const startOverlay = document.getElementById("startOverlay");
+  const resultOverlay = document.getElementById("resultOverlay");
+  const resultTitle = document.getElementById("resultTitle");
+  const resultText = document.getElementById("resultText");
+  const startBtn = document.getElementById("startBtn");
+  const closeStartBtn = document.getElementById("closeStartBtn");
+  const sendResultBtn = document.getElementById("sendResultBtn");
+  const restartBtn = document.getElementById("restartBtn");
+  const difficultyInput = document.getElementById("difficulty");
+  const speedInput = document.getElementById("speed");
+  const sensitivityInput = document.getElementById("sensitivity");
+  const volumeInput = document.getElementById("volume");
+  const roundTimeInput = document.getElementById("roundTime");
+  const crosshairColorInput = document.getElementById("crosshairColor");
+  const musicBtn = document.getElementById("musicBtn");
+  const crosshair = document.getElementById("crosshair");
+  const difficultyText = document.getElementById("difficultyText");
+  const speedText = document.getElementById("speedText");
+  const sensText = document.getElementById("sensText");
+  const volumeText = document.getElementById("volumeText");
+  const roundText = document.getElementById("roundText");
+
+  let running = false;
+  let gameEnded = false;
+  let lastTime = 0;
+  let spawnTimer = 0;
+  let shotCooldown = 0;
+  let roundTimer = 60;
+  let resultPayload = null;
+  const keys = {};
+  const mouse = { x: 0, y: 0, down: false };
+
+  const settings = {
+    difficulty: "normal",
+    speed: 4,
+    sensitivity: 1,
+    volume: 0.4,
+    roundTime: 60,
+    crosshairColor: "white",
+    music: false
+  };
+
+  const difficultyConfig = {
+    easy: { enemySpeed: 1.1, spawnRate: 1.35, targetKills: 8, damage: 7, eloWin: 20, eloLose: -8 },
+    normal: { enemySpeed: 1.55, spawnRate: 1.05, targetKills: 12, damage: 10, eloWin: 28, eloLose: -14 },
+    hard: { enemySpeed: 2.05, spawnRate: 0.82, targetKills: 16, damage: 13, eloWin: 38, eloLose: -22 },
+    insane: { enemySpeed: 2.65, spawnRate: 0.62, targetKills: 22, damage: 17, eloWin: 55, eloLose: -35 }
+  };
+
+  const player = { x: 300, y: 300, r: 18, hp: 100, kills: 0, ammo: 30, maxAmmo: 30, reload: 0 };
+  let bullets = [];
+  let enemies = [];
+  let particles = [];
+  let audioCtx = null;
+  let musicTimer = null;
+
+  function viewWidth() { return canvas.getBoundingClientRect().width; }
+  function viewHeight() { return canvas.getBoundingClientRect().height; }
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * devicePixelRatio);
+    canvas.height = Math.floor(rect.height * devicePixelRatio);
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+
+  function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+  function syncSettingsText() {
+    difficultyText.textContent = settings.difficulty[0].toUpperCase() + settings.difficulty.slice(1);
+    speedText.textContent = settings.speed;
+    sensText.textContent = settings.sensitivity.toFixed(1);
+    volumeText.textContent = Math.round(settings.volume * 100) + "%";
+    roundText.textContent = settings.roundTime + "s";
+  }
+
+  function updateCrosshairColor() {
+    const style = document.createElement("style");
+    style.textContent = \`
+      .crosshair::before,
+      .crosshair::after {
+        background: \${settings.crosshairColor} !important;
+        box-shadow: 0 0 10px \${settings.crosshairColor} !important;
+      }
+    \`;
+    document.head.appendChild(style);
+  }
+
+  function resetGame() {
+    player.x = viewWidth() / 2;
+    player.y = viewHeight() / 2;
+    player.hp = 100;
+    player.kills = 0;
+    player.ammo = player.maxAmmo;
+    player.reload = 0;
+    bullets = [];
+    enemies = [];
+    particles = [];
+    roundTimer = settings.roundTime;
+    spawnTimer = 0;
+    shotCooldown = 0;
+    running = true;
+    gameEnded = false;
+    resultPayload = null;
+    resultOverlay.style.display = "none";
+    startOverlay.style.display = "none";
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function spawnEnemy() {
+    const vw = viewWidth();
+    const vh = viewHeight();
+    const side = Math.floor(Math.random() * 4);
+    let x = 0;
+    let y = 0;
+    if (side === 0) { x = Math.random() * vw; y = -30; }
+    else if (side === 1) { x = vw + 30; y = Math.random() * vh; }
+    else if (side === 2) { x = Math.random() * vw; y = vh + 30; }
+    else { x = -30; y = Math.random() * vh; }
+    enemies.push({ x, y, r: 17, hp: 2, hit: 0 });
+  }
+
+  function playTone(freq, duration, volume = 0.08) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.frequency.value = freq;
+    osc.type = "square";
+    gain.gain.value = volume * settings.volume;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    window.setTimeout(() => {
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.06);
+      osc.stop(audioCtx.currentTime + duration);
+    }, duration * 1000);
+  }
+
+  function playShotSound() { playTone(160, 0.06, 0.07); }
+
+  function playReloadSound() {
+    playTone(420, 0.08, 0.04);
+    window.setTimeout(() => playTone(520, 0.08, 0.04), 120);
+  }
+
+  function startMusic() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (musicTimer) return;
+    settings.music = true;
+    musicBtn.textContent = "Музыка: вкл";
+    const notes = [55, 65, 73, 82, 98, 82, 73, 65];
+    let index = 0;
+    musicTimer = window.setInterval(() => {
+      if (!settings.music) return;
+      playTone(notes[index % notes.length], 0.12, 0.035);
+      index += 1;
+    }, 220);
+  }
+
+  function stopMusic() {
+    settings.music = false;
+    musicBtn.textContent = "Музыка: выкл";
+    if (musicTimer) {
+      window.clearInterval(musicTimer);
+      musicTimer = null;
+    }
+  }
+
+  function toggleMusic() {
+    if (settings.music) stopMusic();
+    else startMusic();
+  }
+
+  function shoot() {
+    if (!running || gameEnded) return;
+    if (shotCooldown > 0) return;
+    if (player.reload > 0) return;
+    if (player.ammo <= 0) {
+      reload();
+      return;
+    }
+    const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+    bullets.push({
+      x: player.x + Math.cos(angle) * 22,
+      y: player.y + Math.sin(angle) * 22,
+      vx: Math.cos(angle) * 12 * settings.sensitivity,
+      vy: Math.sin(angle) * 12 * settings.sensitivity,
+      life: 80
+    });
+    player.ammo -= 1;
+    shotCooldown = 0.13;
+    playShotSound();
+  }
+
+  function reload() {
+    if (player.reload > 0 || player.ammo === player.maxAmmo) return;
+    player.reload = 1.1;
+    playReloadSound();
+  }
+
+  function addParticles(x, y, color, count = 8) {
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        life: 30 + Math.random() * 20,
+        color
+      });
+    }
+  }
+
+  function endGame(win) {
+    if (gameEnded) return;
+    running = false;
+    gameEnded = true;
+    const config = difficultyConfig[settings.difficulty];
+    const eloChange = win ? config.eloWin : config.eloLose;
+    resultPayload = {
+      type: "DNG_GAME_RESULT",
+      source: "dng-cs2-minigame",
+      result: win ? "win" : "lose",
+      eloChange,
+      kills: player.kills,
+      hp: Math.max(0, Math.round(player.hp)),
+      difficulty: settings.difficulty,
+      mode: "CS2 Mini Game",
+      createdAt: new Date().toLocaleString("ru-RU")
+    };
+    resultTitle.textContent = win ? "Победа" : "Поражение";
+    resultTitle.className = win ? "result-win" : "result-lose";
+    resultText.innerHTML = \`
+      Результат: <b>\${win ? "WIN" : "LOSE"}</b><br>
+      Убийств: <b>\${player.kills}</b><br>
+      HP: <b>\${Math.max(0, Math.round(player.hp))}</b><br>
+      Изменение ELO: <b>\${eloChange > 0 ? "+" : ""}\${eloChange}</b>
+    \`;
+    resultOverlay.style.display = "grid";
+    eloPreviewEl.textContent = eloChange > 0 ? "+" + eloChange : eloChange;
+    try { localStorage.setItem("dng_minigame_result", JSON.stringify(resultPayload)); } catch {}
+    try { if (window.opener) window.opener.postMessage(resultPayload, "*"); } catch {}
+  }
+
+  function sendAndClose() {
+    if (resultPayload) {
+      try { localStorage.setItem("dng_minigame_result", JSON.stringify(resultPayload)); } catch {}
+      try { if (window.opener) window.opener.postMessage(resultPayload, "*"); } catch {}
+    }
+    window.close();
+  }
+
+  function update(dt) {
+    const config = difficultyConfig[settings.difficulty];
+    const vw = viewWidth();
+    const vh = viewHeight();
+    roundTimer -= dt;
+    shotCooldown = Math.max(0, shotCooldown - dt);
+    if (player.reload > 0) {
+      player.reload -= dt;
+      if (player.reload <= 0) player.ammo = player.maxAmmo;
+    }
+    let mx = 0, my = 0;
+    if (keys.KeyW || keys.ArrowUp) my -= 1;
+    if (keys.KeyS || keys.ArrowDown) my += 1;
+    if (keys.KeyA || keys.ArrowLeft) mx -= 1;
+    if (keys.KeyD || keys.ArrowRight) mx += 1;
+    if (mx || my) {
+      const len = Math.hypot(mx, my) || 1;
+      player.x += (mx / len) * settings.speed * 90 * dt;
+      player.y += (my / len) * settings.speed * 90 * dt;
+    }
+    player.x = clamp(player.x, 26, vw - 26);
+    player.y = clamp(player.y, 26, vh - 26);
+    if (mouse.down) shoot();
+    spawnTimer -= dt;
+    if (spawnTimer <= 0) {
+      spawnEnemy();
+      spawnTimer = config.spawnRate;
+    }
+    bullets.forEach(bullet => {
+      bullet.x += bullet.vx;
+      bullet.y += bullet.vy;
+      bullet.life -= 1;
+    });
+    bullets = bullets.filter(bullet => bullet.life > 0 && bullet.x > -40 && bullet.y > -40 && bullet.x < vw + 40 && bullet.y < vh + 40);
+    enemies.forEach(enemy => {
+      const angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
+      enemy.x += Math.cos(angle) * config.enemySpeed * 80 * dt;
+      enemy.y += Math.sin(angle) * config.enemySpeed * 80 * dt;
+      enemy.hit = Math.max(0, enemy.hit - dt);
+      if (dist(enemy, player) < enemy.r + player.r) {
+        player.hp -= config.damage * dt;
+        enemy.hit = 0.12;
+      }
+    });
+    bullets.forEach(bullet => {
+      enemies.forEach(enemy => {
+        if (dist(bullet, enemy) < enemy.r) {
+          bullet.life = 0;
+          enemy.hp -= 1;
+          enemy.hit = 0.18;
+          addParticles(enemy.x, enemy.y, "white", 5);
+          if (enemy.hp <= 0) {
+            player.kills += 1;
+            addParticles(enemy.x, enemy.y, "#ef4444", 14);
+          }
+        }
+      });
+    });
+    enemies = enemies.filter(enemy => enemy.hp > 0);
+    particles.forEach(particle => {
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.life -= 1;
+    });
+    particles = particles.filter(particle => particle.life > 0);
+    if (player.hp <= 0) endGame(false);
+    if (player.kills >= config.targetKills) endGame(true);
+    if (roundTimer <= 0) endGame(player.kills >= config.targetKills);
+    hpEl.textContent = Math.max(0, Math.round(player.hp));
+    killsEl.textContent = player.kills + "/" + config.targetKills;
+    timeEl.textContent = Math.ceil(Math.max(0, roundTimer));
+    ammoEl.textContent = player.reload > 0 ? "R..." : player.ammo;
+    eloPreviewEl.textContent = config.eloWin + "/" + config.eloLose;
+  }
+
+  function drawPlayer() {
+    const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(angle);
+    ctx.shadowColor = "white";
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = "#050505";
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, player.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "white";
+    ctx.fillRect(6, -4, 26, 8);
+    ctx.restore();
+  }
+
+  function drawEnemy(enemy) {
+    ctx.save();
+    ctx.translate(enemy.x, enemy.y);
+    ctx.shadowColor = enemy.hit > 0 ? "white" : "#ef4444";
+    ctx.shadowBlur = enemy.hit > 0 ? 18 : 10;
+    ctx.fillStyle = enemy.hit > 0 ? "#fff" : "#180505";
+    ctx.strokeStyle = enemy.hit > 0 ? "#fff" : "#ef4444";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, enemy.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,.75)";
+    ctx.beginPath();
+    ctx.moveTo(-8, 0);
+    ctx.lineTo(8, 0);
+    ctx.moveTo(0, -8);
+    ctx.lineTo(0, 8);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw() {
+    const vw = viewWidth();
+    const vh = viewHeight();
+    ctx.clearRect(0, 0, vw, vh);
+    ctx.save();
+    ctx.globalAlpha = 0.16;
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < vw; x += 48) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, vh);
+      ctx.stroke();
+    }
+    for (let y = 0; y < vh; y += 48) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(vw, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+    bullets.forEach(bullet => {
+      ctx.save();
+      ctx.shadowColor = "white";
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(bullet.x, bullet.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+    enemies.forEach(drawEnemy);
+    particles.forEach(particle => {
+      ctx.save();
+      ctx.globalAlpha = particle.life / 50;
+      ctx.fillStyle = particle.color;
+      ctx.fillRect(particle.x, particle.y, 3, 3);
+      ctx.restore();
+    });
+    drawPlayer();
+    if (player.reload > 0) {
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,.9)";
+      ctx.font = "900 18px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("RELOADING", player.x, player.y - 38);
+      ctx.restore();
+    }
+  }
+
+  function loop(now) {
+    if (!running) return;
+    const dt = Math.min(0.033, (now - lastTime) / 1000);
+    lastTime = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("resize", resize);
+  window.addEventListener("keydown", event => {
+    keys[event.code] = true;
+    if (event.code === "Space") {
+      event.preventDefault();
+      shoot();
+    }
+    if (event.code === "KeyR") reload();
+  });
+  window.addEventListener("keyup", event => { keys[event.code] = false; });
+  canvas.addEventListener("mousemove", event => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = event.clientX - rect.left;
+    mouse.y = event.clientY - rect.top;
+    crosshair.style.left = event.clientX + "px";
+    crosshair.style.top = event.clientY + "px";
+  });
+  canvas.addEventListener("mousedown", () => {
+    mouse.down = true;
+    shoot();
+  });
+  window.addEventListener("mouseup", () => { mouse.down = false; });
+  difficultyInput.addEventListener("change", () => {
+    settings.difficulty = difficultyInput.value;
+    syncSettingsText();
+  });
+  speedInput.addEventListener("input", () => {
+    settings.speed = Number(speedInput.value);
+    syncSettingsText();
+  });
+  sensitivityInput.addEventListener("input", () => {
+    settings.sensitivity = Number(sensitivityInput.value);
+    syncSettingsText();
+  });
+  volumeInput.addEventListener("input", () => {
+    settings.volume = Number(volumeInput.value) / 100;
+    syncSettingsText();
+  });
+  roundTimeInput.addEventListener("input", () => {
+    settings.roundTime = Number(roundTimeInput.value);
+    syncSettingsText();
+  });
+  crosshairColorInput.addEventListener("change", () => {
+    settings.crosshairColor = crosshairColorInput.value;
+    updateCrosshairColor();
+  });
+  musicBtn.addEventListener("click", toggleMusic);
+  startBtn.addEventListener("click", resetGame);
+  closeStartBtn.addEventListener("click", () => window.close());
+  sendResultBtn.addEventListener("click", sendAndClose);
+  restartBtn.addEventListener("click", resetGame);
+  resize();
+  syncSettingsText();
+  updateCrosshairColor();
+  draw();
+<\/script>
+</body>
+</html>`;
+    }
+
+    const savedResult = localStorage.getItem("dng_minigame_result");
+    if (savedResult) {
+      try {
+        applyMiniGameResult(JSON.parse(savedResult));
+      } catch {}
+    }
+
+    render();
+    loadServerState();
+    const DNG_LIVE_REFRESH = true;
+    if (API_MODE) {
+      setInterval(() => {
+        if (["leaderboard", "profile", "news"].includes(state.route)) {
+          loadServerState();
+        }
+      }, 7000);
+    }
+  </script>
+</body>
+</html>
