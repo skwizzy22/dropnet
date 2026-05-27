@@ -1,0 +1,14 @@
+{
+  "name": "dropnetgaming-git-ready",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static DNG CS2 Match Hub with mini game, admin panel, ELO and GitHub Pages workflow.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "node -e \"console.log('Static project: no build needed. GitHub Pages deploys root files.')\""
+  },
+  "dependencies": {
+    "express": "^4.18.3"
+  }
+}
