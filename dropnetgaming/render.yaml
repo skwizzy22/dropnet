@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: dropnetgaming
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_PATH
+        sync: false
+      - key: ADMIN_TOKEN_SECRET
+        sync: false
